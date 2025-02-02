@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="title" content="Karatel's Batch Obfuscation - FREE (Online & No Reg)">
+    <meta name="description" content="Are you looking for a free obfuscator to obfuscate your .bat / .cmd within a second. You're at the right place.">
+    <meta name="keywords" content="karatel, karatelsh, batch, obfuscator, github">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="1 days">
+    <meta name="author" content="Karatel">
+
+    <meta charset="UTF-8">
+    <title>Karatel's Batch Obfuscator</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="githubLink">
+      <a href="https://github.com/KaratelSH" target="_blank">GitHub</a>
+    </div>
+    <div id="version">v0.1 - Will be improved soon</div>
+    
+    <h1>Karatel's Basic Batch Obfuscation</h1>
+    <form id="obfuscatorForm">
+      <label for="inputFile">Select the .bat or .cmd file to obfuscate:</label>
+      <input type="file" id="inputFile" accept=".bat,.cmd" required>
+      <label for="encryptionType">Select Obfuscation Type:</label>
+      <select id="encryptionType">
+        <option value="base64">Base64 Encoding (1.5/10)</option>
+        <option value="fakeexpander">Fake Size Expander - add ~5MB (1/10)</option>
+      </select>
+      <br>
+      <button type="button" onclick="obfuscate()">Obfuscate</button>
+      <button type="button" onclick="saveFile()" style="display:none;" id="saveBtn">Save Obfuscated File</button>
+      <button type="button" onclick="clearSettings()" style="display:inline;">Clear</button>
+    </form>
+    <h2>Obfuscated Output</h2>
+    <textarea id="output" rows="20" readonly></textarea>
+    <script>
+      function appendFakeData(content, realCode) {
+        if (!content.endsWith("\r\n")) {
+          content += "\r\n";
+        }
+        function generateRandomData(length) {
+          const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+          const commentStyles = ["REM", "::", ":: //", "REM #", "REM //", "REM --"];
+          let commentStyle = commentStyles[Math.floor(Math.random() * commentStyles.length)];
+          let result = commentStyle + " ";
+          for (let i = result.length; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return result + "\r\n";
+        }
+        const targetBytes = 5 * 1024 * 1024;
+        const realCodeBytes = new Blob([realCode]).size;
+        const totalFakeBytes = targetBytes - realCodeBytes;
+        const fakeLineLength = 100;
+        const repeatCount = Math.ceil(totalFakeBytes / fakeLineLength);
+        let fakeData = '';
+        for (let i = 0; i < repeatCount; i++) {
+          fakeData += generateRandomData(fakeLineLength);
+        }
+        const middlePosition = Math.floor(fakeData.length / 2);
+        fakeData = fakeData.slice(0, middlePosition) + "REM " + realCode + fakeData.slice(middlePosition);
+        return content + fakeData;
+      }
+
+      const content = "Some initial batch file content";
+      const realCode = "echo This is the real code!";
+      const modifiedContent = appendFakeData(content, realCode);
+      console.log(modifiedContent);
+      
+      let finalOutput = "";
+
+      function generateRandomFileName(length) {
+        const chars = ['l', 'I'];
+        let result = '';
+        for (let i = 0; i < length; i++) {
+          result += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return result;
+      }
+
+      function obfuscate() {
+        const fileInput = document.getElementById('inputFile');
+        const encryptionType = document.getElementById('encryptionType').value;
+        if (fileInput.files.length === 0) {
+          alert("Please select a file.");
+          return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const originalContent = e.target.result;
+          let header = "@echo off\r\n:: Basic protection using Karatel batch obfuscator\r\n";
+          let content = header + originalContent;
+          let obfuscatedContent = "";
+          if (encryptionType === "base64") {
+            const encoded = btoa(content);
+            obfuscatedContent = header;
+            const tempFileName = generateRandomFileName(16) + ".txt";
+            const decodedFileName = generateRandomFileName(16) + ".bat";
+            obfuscatedContent += "echo " + encoded + " > " + tempFileName + "\r\n";
+            obfuscatedContent += "certutil -decode " + tempFileName + " " + decodedFileName + " >nul 2>&1\r\n";
+            obfuscatedContent += "call " + decodedFileName + "\r\n";
+            obfuscatedContent += "del " + tempFileName + "\r\ndel " + decodedFileName + "\r\n";
+          } else if (encryptionType === "fakeexpander") {
+            obfuscatedContent = appendFakeData(content);
+          }
+          finalOutput = obfuscatedContent;
+          document.getElementById('output').value = obfuscatedContent;
+          document.getElementById('saveBtn').style.display = "inline";
+        };
+        reader.readAsText(file);
+      }
+
+      function saveFile() {
+        if (!finalOutput) {
+          alert("No obfuscated content to save.");
+          return;
+        }
+        const blob = new Blob([finalOutput], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "obfuscated.bat";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function clearSettings() {
+        document.getElementById('obfuscatorForm').reset();
+        document.getElementById('output').value = '';
+        document.getElementById('saveBtn').style.display = "none";
+      }
+    </script>
+  </body>
+</html>
