@@ -4,7 +4,7 @@
 
 <h2>🚀 Demo</h2>
 
-[https://batchobf.karatel.sh](https://batchobf.karatel.sh) (not ready yet)
+[https://batchobf.karatel.sh](https://batchobf.karatel.sh)
 
   
   
